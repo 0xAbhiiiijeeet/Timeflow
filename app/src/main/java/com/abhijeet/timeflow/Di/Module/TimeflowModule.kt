@@ -1,0 +1,136 @@
+package com.abhijeet.timeflow.Di.Module
+
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.datastore.preferences.preferencesDataStoreFile
+import androidx.room.Room
+import com.abhijeet.timeflow.Data.Dao.CountdownDao
+import com.abhijeet.timeflow.Data.Dao.EventDao
+import com.abhijeet.timeflow.Data.Dao.TaskDao
+import com.abhijeet.timeflow.Data.EventDatabase
+import com.abhijeet.timeflow.Data.MIGRATION_1_2
+import com.abhijeet.timeflow.Data.Repo.DataStoreRepo
+import com.abhijeet.timeflow.Data.Repo.EventRepo
+import com.abhijeet.timeflow.Data.TaskDatabase
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@InstallIn(SingletonComponent::class)
+@Module
+class TimeFlowModule (
+
+){
+    private val Context.dataStore by preferencesDataStore(name = "user_prefs")
+    // provides the application context
+    @Singleton
+    @Provides
+    fun provideApplicationContext(
+        @ApplicationContext context: Context
+    ) : Context{
+        return context
+    }
+
+    // provide the event database
+    @Singleton
+    @Provides
+    fun provideEventDatabase(
+        @ApplicationContext context: Context
+    ): EventDatabase {
+        return Room.databaseBuilder(
+            context,
+            EventDatabase::class.java,
+            "event_db"
+        ).addMigrations(MIGRATION_1_2).build()
+    }
+
+    // provide the task database
+    @Singleton
+    @Provides
+    fun provideTaskDatabase(
+        @ApplicationContext context: Context
+    ) : TaskDatabase{
+        return Room.databaseBuilder(
+            context,
+            TaskDatabase::class.java,
+            "task_db"
+        ).build()
+    }
+
+    // provide the task dao
+    @Singleton
+    @Provides
+    fun provideTaskDao(
+        taskDatabase: TaskDatabase
+    ) : TaskDao{
+        return taskDatabase.taskDao()
+    }
+
+    // provide the event dao
+    @Singleton
+    @Provides
+    fun provideEventDao(
+        eventDatabase: EventDatabase
+    ): EventDao {
+        return eventDatabase.eventDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideCountDownDao(
+        eventDatabase: EventDatabase
+    ): CountdownDao{
+        return eventDatabase.countDownDao()
+    }
+
+    // provides the event repository
+    @Singleton
+    @Provides
+    fun provideEventRepository(
+        eventDao: EventDao,
+        countdownDao: CountdownDao
+    ): EventRepo{
+        return EventRepo(
+            eventDao = eventDao,
+            countdownDao = countdownDao
+        )
+    }
+
+    // provide the datastore prefrences
+    private val PREF_NAME = "onboarding_pref"
+    @Provides
+    @Singleton
+    fun provideDataStore(
+        @ApplicationContext context: Context
+    ) : DataStore<Preferences>{
+        return PreferenceDataStoreFactory.create(
+            produceFile = {
+                context.preferencesDataStoreFile(
+                    PREF_NAME
+                )
+            }
+        )
+    }
+
+
+
+    @Singleton
+    @Provides
+    fun provideDataStoreRepo(
+        @ApplicationContext context: Context,
+        dataStore: DataStore<Preferences>
+    ) : DataStoreRepo{
+        return DataStoreRepo(
+            context = context,
+            dataStore = dataStore
+        )
+    }
+
+
+}

@@ -1,0 +1,39 @@
+package com.abhijeet.timeflow.View.Navigation
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+sealed interface Routes {
+    val route : String
+     @Serializable
+    data object TimerScreen : Routes{
+         override val route ="m_timer_screen"
+    }
+    @Serializable
+    data object ShowFeaturesScreen : Routes{
+        override val route ="feature_screen"
+    }
+    @Serializable
+    data object WelcomeScreen : Routes{
+        override val route = "welcome_screen"
+    }
+    @Serializable
+    data object NotificationScreen : Routes{
+        override val route = "notification_screen"
+    }
+
+    @Serializable
+    data object CalendarScreen : Routes{
+        override val route = "m_new_task_screen"
+    }
+
+@Serializable
+    data object PrivacyScreen : Routes{
+        override val route = "privacy_screen"
+    }
+
+    @Serializable
+    data object SettingsScreen : Routes{
+        override val route = "settings_screen"
+    }
+}
